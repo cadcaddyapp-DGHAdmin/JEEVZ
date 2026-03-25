@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JEEVZ">
+<meta name="theme-color" content="#050f05">
+<title>JEEVZ — Command</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:       #050f05;
+  --bg2:      #0a160a;
+  --bg3:      #0f1f0f;
+  --card:     #0c1a0c;
+  --card2:    #112011;
+  --border:   rgba(52,211,80,0.18);
+  --border2:  rgba(52,211,80,0.35);
+  --green:    #34d350;
+  --green2:   #22a83c;
+  --gdim:     rgba(52,211,80,0.10);
+  --gdim2:    rgba(52,211,80,0.05);
+  --amber:    #f59e0b;
+  --adim:     rgba(245,158,11,0.12);
+  --red:      #f87171;
+  --rdim:     rgba(248,113,113,0.10);
+  --blue:     #38bdf8;
+  --bdim:     rgba(56,189,248,0.10);
+  --gold:     #fbbf24;
+  --text:     #e8f5e8;
+  --text2:    #6db87d;
+  --text3:    #2d5c35;
+  --mono:     'IBM Plex Mono', monospace;
+  --sans:     'Inter', sans-serif;
+  --r:        12px;
+  --r2:       8px;
+  --r3:       6px;
+  --nav-h:    64px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg); min-height: 100vh; overflow-x: hidden; }
+body { font-family: var(--sans); color: var(--text); }
+
+/* scanlines */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.025) 3px, rgba(0,0,0,0.025) 4px);
+  pointer-events: none; z-index: 9999;
+}
+
+/* ── SETUP ── */
+#setup {
+  display: none; position: fixed; inset: 0;
+  background: var(--bg); z-index: 500;
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.5rem; padding: 2rem;
+}
+#setup.active { display: flex; }
+.setup-logo { font-family: var(--mono); font-size: 2.8rem; color: var(--green); letter-spacing: .25em; font-weight: 600; }
+.setup-tagline { color: var(--text2); font-size: .9rem; text-align: center; line-height: 1.7; max-width: 340px; }
+.setup-field { width: 100%; max-width: 380px; }
+.setup-label { font-family: var(--mono); font-size: .7rem; color: var(--text2); letter-spacing: .1em; display: block; margin-bottom: 6px; }
+.setup-input {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--r2); padding: .8rem 1rem; color: var(--text);
+  font-family: var(--mono); font-size: .85rem; outline: none;
+  transition: border-color .2s;
+}
+.setup-input:focus { border-color: var(--green); }
+.setup-btn {
+  width: 100%; max-width: 380px;
+  background: var(--green); color: #050f05; border: none;
+  border-radius: var(--r2); padding: .9rem 2rem;
+  font-family: var(--mono); font-size: .9rem; font-weight: 700;
+  letter-spacing: .1em; cursor: pointer; transition: opacity .2s;
+}
+.setup-btn:active { opacity: .8; }
+
+/* ── MAIN APP ── */
+#app { display: none; }
+#app.active { display: block; }
+
+/* ── HEADER ── */
+.hdr {
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  padding: .9rem 1.25rem; display: flex; align-items: center; gap: .75rem;
+  position: sticky; top: 0; z-index: 100;
+}
+.hdr-logo { font-family: var(--mono); font-size: 1.4rem; color: var(--green); letter-spacing: .18em; font-weight: 600; }
+.hdr-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 6px var(--green)} 50%{opacity:.4;box-shadow:none} }
+.hdr-date { margin-left: auto; font-family: var(--mono); font-size: .65rem; color: var(--text3); }
+.hdr-btn { background: none; border: 1px solid var(--border); border-radius: var(--r3); padding: .3rem .6rem; color: var(--text2); font-size: .7rem; font-family: var(--mono); cursor: pointer; }
+
+/* ── CHECKIN BANNER ── */
+#checkin-banner {
+  display: none; background: var(--adim); border-bottom: 1px solid var(--amber);
+  padding: .6rem 1.25rem; align-items: center; gap: .75rem;
+  position: sticky; top: 53px; z-index: 99;
+  animation: amber-pulse 2s ease-in-out infinite;
+}
+#checkin-banner.show { display: flex; }
+@keyframes amber-pulse { 0%,100%{border-color:var(--amber)} 50%{border-color:rgba(245,158,11,.3)} }
+.checkin-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); animation: pulse 1.5s ease-in-out infinite; }
+.checkin-label { font-family: var(--mono); font-size: .7rem; color: var(--amber); letter-spacing: .05em; flex: 1; }
+.checkin-input { flex: 2; background: var(--bg3); border: 1px solid rgba(245,158,11,.3); border-radius: var(--r3); padding: .35rem .6rem; color: var(--text); font-size: .75rem; font-family: var(--sans); outline: none; min-width: 0; }
+.checkin-log-btn { background: var(--amber); color: #050f05; border: none; border-radius: var(--r3); padding: .35rem .7rem; font-family: var(--mono); font-size: .68rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
+/* ── PAGE WRAPPER ── */
+.page { display: none; padding: 1rem 1.1rem calc(var(--nav-h) + 1.5rem); }
+.page.active { display: block; }
+
+/* ── SECTION HEADERS ── */
+.sec-title {
+  font-family: var(--mono); font-size: .7rem; color: var(--text2);
+  letter-spacing: .15em; text-transform: uppercase;
+  margin: 1.1rem 0 .7rem; display: flex; align-items: center; gap: .6rem;
+}
+.sec-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+.sec-title .badge {
+  background: var(--gdim); border: 1px solid var(--border);
+  border-radius: 20px; padding: .15rem .5rem;
+  font-size: .6rem; color: var(--green); letter-spacing: .05em;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 1rem 1.1rem; margin-bottom: .75rem;
+}
+.card.green-glow { border-color: var(--border2); box-shadow: 0 0 20px rgba(52,211,80,.06); }
+.card.amber-glow { border-color: rgba(245,158,11,.3); box-shadow: 0 0 20px rgba(245,158,11,.05); }
+.card.blue-glow  { border-color: rgba(56,189,248,.3);  box-shadow: 0 0 20px rgba(56,189,248,.05); }
+
+/* ── BUTTONS ── */
+.btn {
+  background: var(--gdim); border: 1px solid var(--border2);
+  border-radius: var(--r3); padding: .5rem 1rem;
+  color: var(--green); font-family: var(--mono); font-size: .72rem;
+  letter-spacing: .05em; cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.btn:active { background: var(--green); color: #050f05; }
+.btn.primary { background: var(--green); color: #050f05; font-weight: 700; border-color: var(--green); }
+.btn.primary:active { opacity: .8; }
+.btn.amber { background: var(--adim); border-color: rgba(245,158,11,.3); color: var(--amber); }
+.btn.red   { background: var(--rdim); border-color: rgba(248,113,113,.3); color: var(--red); }
+.btn.sm    { padding: .28rem .6rem; font-size: .65rem; }
+.btn-row   { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .6rem; }
+
+/* ── METRICS ── */
+.metric-row { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-bottom: .75rem; }
+.metric-card {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: .7rem .85rem;
+}
+.metric-label { font-family: var(--mono); font-size: .62rem; color: var(--text3); letter-spacing: .08em; margin-bottom: .2rem; }
+.metric-val { font-family: var(--mono); font-size: 1.3rem; color: var(--green); font-weight: 600; line-height: 1; }
+.metric-val.amber { color: var(--amber); }
+.metric-val.red   { color: var(--red); }
+.metric-sub { font-size: .65rem; color: var(--text2); margin-top: .2rem; }
+
+/* ── PROGRESS BAR ── */
+.prog-wrap { background: var(--bg3); border-radius: 20px; height: 8px; overflow: hidden; margin: .4rem 0; }
+.prog-fill  { height: 100%; background: linear-gradient(90deg, var(--green2), var(--green)); border-radius: 20px; transition: width .5s ease; }
+.prog-fill.amber { background: linear-gradient(90deg, #d97706, var(--amber)); }
+.prog-fill.red   { background: linear-gradient(90deg, #dc2626, var(--red)); }
+.prog-label { font-family: var(--mono); font-size: .62rem; color: var(--text2); display: flex; justify-content: space-between; }
+
+/* ── TASK LIST ── */
+.task-item {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: .65rem .85rem;
+  margin-bottom: .45rem; cursor: pointer; transition: all .2s;
+  display: flex; align-items: flex-start; gap: .7rem;
+}
+.task-item:active { border-color: var(--green); }
+.task-item.done { opacity: .55; }
+.task-item.done .task-title { text-decoration: line-through; }
+.task-check {
+  width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px;
+  border: 1.5px solid var(--border2); border-radius: 4px;
+  background: transparent; display: flex; align-items: center; justify-content: center;
+  font-size: .7rem; transition: all .2s;
+}
+.task-item.done .task-check { background: var(--green); border-color: var(--green); color: #050f05; }
+.task-body { flex: 1; min-width: 0; }
+.task-title { font-size: .82rem; font-weight: 500; color: var(--text); line-height: 1.4; }
+.task-biz { font-family: var(--mono); font-size: .6rem; color: var(--text3); margin-top: .15rem; letter-spacing: .05em; }
+.task-impact {
+  display: none; margin-top: .6rem; background: var(--gdim2);
+  border: 1px solid var(--border); border-radius: var(--r3);
+  padding: .55rem .7rem; font-size: .75rem; line-height: 1.6; color: var(--text2);
+}
+.task-item.done .task-impact { display: block; }
+
+/* ── MINI BAR CHART ── */
+.mini-chart { margin-top: .5rem; }
+.mini-chart-label { font-family: var(--mono); font-size: .6rem; color: var(--text3); margin-bottom: .25rem; }
+.mini-bar-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .2rem; }
+.mini-bar-name { font-size: .62rem; color: var(--text2); width: 80px; flex-shrink: 0; }
+.mini-bar-track { flex: 1; background: var(--bg3); border-radius: 4px; height: 6px; overflow: hidden; }
+.mini-bar-fill { height: 100%; border-radius: 4px; background: var(--green); transition: width .6s ease; }
+.mini-bar-fill.amber { background: var(--amber); }
+.mini-bar-pct { font-family: var(--mono); font-size: .6rem; color: var(--text2); width: 32px; text-align: right; }
+
+/* ── FUNNEL ── */
+.funnel { display: flex; flex-direction: column; gap: .4rem; margin: .5rem 0; }
+.funnel-row { display: flex; align-items: center; gap: .75rem; }
+.funnel-bar-wrap { flex: 1; background: var(--bg3); border-radius: 4px; height: 28px; overflow: hidden; position: relative; }
+.funnel-bar { height: 100%; display: flex; align-items: center; padding: 0 .6rem; transition: width .6s ease; }
+.funnel-label-inner { font-family: var(--mono); font-size: .65rem; font-weight: 600; white-space: nowrap; }
+.funnel-meta { font-family: var(--mono); font-size: .68rem; color: var(--text2); min-width: 40px; text-align: right; }
+
+/* ── STREAK ── */
+.streak-grid { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .4rem; }
+.streak-day {
+  width: 36px; height: 36px; border-radius: var(--r3);
+  border: 1px solid var(--border); background: var(--bg3);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: .55rem; color: var(--text3);
+  gap: 2px;
+}
+.streak-day.done { background: var(--gdim); border-color: var(--green); color: var(--green); }
+.streak-day.today { border-color: var(--amber); }
+.streak-day .sd-label { font-size: .5rem; }
+.streak-day .sd-icon { font-size: .9rem; }
+
+/* ── BRIEF ── */
+.brief-box {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: .85rem; min-height: 80px;
+  font-size: .85rem; line-height: 1.8; color: var(--text);
+}
+.brief-box.placeholder { color: var(--text2); font-style: italic; }
+
+/* ── LOG LIST ── */
+.log-item {
+  background: var(--bg3); border-left: 2px solid var(--green);
+  border-radius: 0 var(--r3) var(--r3) 0; padding: .5rem .7rem;
+  margin-bottom: .35rem; font-size: .78rem; color: var(--text2);
+}
+.log-time { font-family: var(--mono); font-size: .62rem; color: var(--text3); margin-bottom: .15rem; }
+
+/* ── INPUT ROW ── */
+.input-row { display: flex; gap: .5rem; align-items: center; margin-top: .4rem; }
+.field {
+  flex: 1; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--r3); padding: .55rem .75rem; color: var(--text);
+  font-size: .82rem; font-family: var(--sans); outline: none;
+  transition: border-color .2s; min-width: 0;
+}
+.field:focus { border-color: var(--green2); }
+.field-label { font-family: var(--mono); font-size: .65rem; color: var(--text2); margin-bottom: .3rem; display: block; }
+
+/* ── TOKEN TRACKER ── */
+.token-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: .5rem; }
+.token-name { font-size: .8rem; font-weight: 500; }
+.token-val  { font-family: var(--mono); font-size: .8rem; color: var(--green); }
+
+/* ── VIRAL SCORE ── */
+.viral-ring {
+  width: 90px; height: 90px; border-radius: 50%;
+  border: 3px solid var(--border2); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; flex-shrink: 0;
+  background: var(--gdim2); position: relative;
+}
+.viral-num { font-family: var(--mono); font-size: 1.6rem; color: var(--green); font-weight: 600; line-height: 1; }
+.viral-label { font-family: var(--mono); font-size: .5rem; color: var(--text3); letter-spacing: .08em; }
+
+/* ── TOAST ── */
+.toast-wrap { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 1000; }
+.toast-msg {
+  background: var(--card2); border: 1px solid var(--border2);
+  border-radius: var(--r2); padding: .55rem 1.1rem;
+  font-family: var(--mono); font-size: .75rem; color: var(--green);
+  opacity: 0; transition: opacity .25s; white-space: nowrap;
+}
+.toast-msg.show { opacity: 1; }
+
+/* ── BOTTOM NAV ── */
+.nav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h);
+  background: var(--bg2); border-top: 1px solid var(--border);
+  display: flex; align-items: stretch; z-index: 200;
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px; background: none; border: none;
+  cursor: pointer; padding: .4rem .2rem; border-top: 2px solid transparent;
+  transition: all .15s;
+}
+.nav-btn.active { border-top-color: var(--green); }
+.nav-icon { font-size: 1.1rem; }
+.nav-label { font-family: var(--mono); font-size: .52rem; color: var(--text3); letter-spacing: .06em; }
+.nav-btn.active .nav-label { color: var(--green); }
+
+/* ── WORK BLOCK STATUS ── */
+.wblock {
+  border-radius: var(--r2); padding: .6rem .85rem;
+  display: flex; align-items: center; gap: .75rem;
+  margin-bottom: .75rem; border: 1px solid;
+}
+.wblock.pre  { background: var(--bg3); border-color: var(--border); }
+.wblock.active-session { background: var(--gdim); border-color: var(--green); }
+.wblock.post { background: var(--adim); border-color: rgba(245,158,11,.3); }
+.wblock-icon { font-size: 1.3rem; }
+.wblock-title { font-family: var(--mono); font-size: .75rem; font-weight: 600; }
+.wblock-sub { font-size: .7rem; color: var(--text2); margin-top: .1rem; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* select */
+select.field { -webkit-appearance: none; }
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup">
+  <div class="setup-logo">JEEVZ</div>
+  <div class="setup-tagline">Your personal AI command center.<br>Set your Anthropic API key to activate.</div>
+  <div class="setup-field">
+    <label class="setup-label">ANTHROPIC API KEY</label>
+    <input class="setup-input" id="setup-key" type="password" placeholder="sk-ant-api03-...">
+  </div>
+  <button class="setup-btn" onclick="initJeevz()">INITIALIZE JEEVZ</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-logo">JEEVZ</div>
+    <div class="hdr-dot"></div>
+    <span style="font-family:var(--mono);font-size:.65rem;color:var(--text3)" id="hdr-status">ONLINE</span>
+    <div class="hdr-date" id="hdr-date"></div>
+    <button class="hdr-btn" onclick="showPage('settings')">⚙</button>
+  </div>
+
+  <!-- Hourly Check-in Banner -->
+  <div id="checkin-banner">
+    <div class="checkin-dot"></div>
+    <div class="checkin-label">HOUR CHECK-IN DUE</div>
+    <input class="checkin-input" id="checkin-input" placeholder="What did you complete?" maxlength="120">
+    <button class="checkin-log-btn" onclick="logCheckin()">LOG</button>
+  </div>
+
+  <!-- COMMAND PAGE -->
+  <div class="page active" id="page-command">
+    <div class="sec-title">Intelligence Brief</div>
+    <div class="card green-glow">
+      <div style="font-family:var(--mono);font-size:.62rem;color:var(--green);letter-spacing:.1em;margin-bottom:.5rem">JEEVZ MORNING BRIEF</div>
+      <div class="brief-box placeholder" id="brief-text">JEEVZ is standing by. Tap "Wake JEEVZ" for your morning briefing.</div>
+      <div class="btn-row">
+        <button class="btn primary" id="brief-btn" onclick="generateBrief()">Wake JEEVZ</button>
+        <button class="btn" onclick="speakBrief()">🔊 Speak</button>
+      </div>
+    </div>
+
+    <div class="sec-title">Revenue Status</div>
+    <div class="metric-row">
+      <div class="metric-card">
+        <div class="metric-label">TOTAL MRR</div>
+        <div class="metric-val" id="cmd-mrr">$0</div>
+        <div class="metric-sub">target: $800/mo</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">APRIL 30 DEADLINE</div>
+        <div class="metric-val amber" id="cmd-days">—</div>
+        <div class="metric-sub">days remaining</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="prog-label"><span>MRR Progress to $800</span><span id="cmd-mrr-pct">0%</span></div>
+      <div class="prog-wrap"><div class="prog-fill" id="cmd-mrr-bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="sec-title">Business Overview</div>
+    <div class="metric-row">
+      <div class="metric-card" onclick="showPage('mi-brief')" style="cursor:pointer">
+        <div class="metric-label">MI SUBSCRIBERS</div>
+        <div class="metric-val" id="cmd-mi-subs">0</div>
+        <div class="metric-sub" id="cmd-mi-mrr">$0/mo</div>
+      </div>
+      <div class="metric-card" onclick="showPage('fragmaw-ops')" style="cursor:pointer">
+        <div class="metric-label">FRAGMAW REV</div>
+        <div class="metric-val amber" id="cmd-fm-rev">$0</div>
+        <div class="metric-sub" id="cmd-fm-posts">0 posts total</div>
+      </div>
+    </div>
+
+    <div class="sec-title">Top Priorities Today</div>
+    <div id="cmd-top-tasks"></div>
+  </div>
+
+  <!-- DAILY OPS PAGE -->
+  <div class="page" id="page-daily-ops">
+    <div id="work-block-status"></div>
+
+    <div class="sec-title">Today's Progress <span class="badge" id="ops-progress-badge">0/10</span></div>
+    <div class="card">
+      <div class="prog-label"><span id="ops-prog-label">0 of 10 tasks complete</span><span id="ops-prog-pct">0%</span></div>
+      <div class="prog-wrap" style="height:10px"><div class="prog-fill" id="ops-prog-bar" style="width:0%"></div></div>
+      <div style="margin-top:.6rem;font-size:.75rem;color:var(--text2)" id="ops-streak-msg"></div>
+    </div>
+
+    <div class="sec-title">7-Day Habit Streak</div>
+    <div class="card">
+      <div class="streak-grid" id="streak-grid"></div>
+    </div>
+
+    <div class="sec-title">MI Outreach Tasks</div>
+    <div id="mi-task-list"></div>
+
+    <div class="sec-title">FragMaw Content Tasks</div>
+    <div id="fm-task-list"></div>
+
+    <div class="sec-title">Today's Check-in Log</div>
+    <div id="checkin-log-display"></div>
+    <div style="font-size:.75rem;color:var(--text3);margin-top:.3rem">Check-ins prompt automatically 8AM–12PM every 55 min.</div>
+  </div>
+
+  <!-- MI BRIEF PAGE -->
+  <div class="page" id="page-mi-brief">
+    <div class="sec-title">Pipeline Funnel</div>
+    <div class="card green-glow">
+      <div class="funnel" id="mi-funnel"></div>
+    </div>
+
+    <div class="sec-title">Outreach Velocity</div>
+    <div class="card">
+      <div style="font-size:.78rem;color:var(--text2);margin-bottom:.6rem">DMs sent per day this week</div>
+      <div id="mi-velocity-chart"></div>
+      <div class="metric-row" style="margin-top:.75rem">
+        <div class="metric-card">
+          <div class="metric-label">WEEK TOTAL DMS</div>
+          <div class="metric-val" id="mi-week-dms">0</div>
+          <div class="metric-sub">target: 70/week</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">RESPONSE RATE</div>
+          <div class="metric-val" id="mi-response-rate">—</div>
+          <div class="metric-sub">industry avg: 8%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-title">Conversion Probability</div>
+    <div class="card">
+      <div id="mi-conv-math"></div>
+    </div>
+
+    <div class="sec-title">Phase Focus</div>
+    <div class="card amber-glow" id="mi-phase-card"></div>
+
+    <div class="sec-title">Day 12 Alerts</div>
+    <div class="card" id="mi-day12-card">
+      <div style="font-size:.8rem;color:var(--text2)">No trial users tracked yet. Add trial users below to enable Day 12 conversion alerts.</div>
+    </div>
+
+    <div class="sec-title">Update MI Metrics</div>
+    <div class="card">
+      <div class="field-label">Paying subscribers</div>
+      <div class="input-row"><input class="field" id="mi-subs-in" type="number" placeholder="0"><button class="btn sm" onclick="saveMI()">Save</button></div>
+      <div class="field-label" style="margin-top:.6rem">DMs sent today</div>
+      <div class="input-row"><input class="field" id="mi-dms-in" type="number" placeholder="0"><button class="btn sm" onclick="saveDMsToday()">Add</button></div>
+      <div class="field-label" style="margin-top:.6rem">Total responses received (lifetime)</div>
+      <div class="input-row"><input class="field" id="mi-resp-in" type="number" placeholder="0"><button class="btn sm" onclick="saveMIResponses()">Save</button></div>
+      <div class="field-label" style="margin-top:.6rem">Add trial user (name + start date)</div>
+      <div class="input-row">
+        <input class="field" id="mi-trial-name" placeholder="Sarah — Mar 24">
+        <button class="btn sm" onclick="addTrialUser()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FRAGMAW OPS PAGE -->
+  <div class="page" id="page-fragmaw-ops">
+    <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:.75rem">
+      <div class="viral-ring">
+        <div class="viral-num" id="viral-score">0</div>
+        <div class="viral-label">VIRAL SCORE</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-family:var(--mono);font-size:.7rem;color:var(--text2);margin-bottom:.3rem">MOMENTUM INDEX</div>
+        <div class="prog-wrap"><div class="prog-fill" id="viral-bar" style="width:0%"></div></div>
+        <div style="font-size:.72rem;color:var(--text2);margin-top:.4rem" id="viral-msg">Post daily at 7PM PT to build momentum.</div>
+      </div>
+    </div>
+
+    <div class="sec-title">Today's Content Plan</div>
+    <div class="card green-glow" id="fm-today-plan"></div>
+
+    <div class="sec-title">Platform Metrics</div>
+    <div class="metric-row">
+      <div class="metric-card">
+        <div class="metric-label">TIKTOK POSTS</div>
+        <div class="metric-val" id="fm-tiktok-posts">0</div>
+        <div class="metric-sub">@fragmaw</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">BEST POST VIEWS</div>
+        <div class="metric-val amber" id="fm-best-views">66</div>
+        <div class="metric-sub">keep posting to grow</div>
+      </div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-card">
+        <div class="metric-label">TOTAL REVENUE</div>
+        <div class="metric-val" id="fm-rev-display">$0</div>
+        <div class="metric-sub">break-even: 8 customers</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">PAYING CUSTOMERS</div>
+        <div class="metric-val" id="fm-customers">0</div>
+        <div class="metric-sub">target: 8 → break-even</div>
+      </div>
+    </div>
+
+    <div class="sec-title">Token & API Budget</div>
+    <div class="card amber-glow">
+      <div class="token-row">
+        <span class="token-name">ElevenLabs Credits</span>
+        <span class="token-val" id="el-credits">31,157</span>
+      </div>
+      <div class="prog-wrap"><div class="prog-fill" id="el-bar" style="width:100%"></div></div>
+      <div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem" id="el-label">~129 videos remaining at 1/day</div>
+
+      <div class="token-row">
+        <span class="token-name">Anthropic API Balance</span>
+        <span class="token-val" id="api-bal">$4.70</span>
+      </div>
+      <div class="prog-wrap"><div class="prog-fill amber" id="api-bar" style="width:47%"></div></div>
+      <div style="font-size:.72rem;color:var(--text2)" id="api-label">~671 roasts remaining</div>
+
+      <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)">
+        <div style="font-size:.72rem;color:var(--text2);font-weight:500;margin-bottom:.4rem">⚠ Add $10 to Anthropic before marketing push</div>
+        <div style="font-size:.7rem;color:var(--text3)">Rule: Write & approve roast text BEFORE generating ElevenLabs audio.</div>
+      </div>
+    </div>
+
+    <div class="sec-title">Content Schedule</div>
+    <div class="card" id="fm-content-schedule"></div>
+
+    <div class="sec-title">Update Metrics</div>
+    <div class="card">
+      <div class="field-label">TikTok posts total</div>
+      <div class="input-row"><input class="field" id="fm-posts-in" type="number" placeholder="1"><button class="btn sm" onclick="saveFragMaw()">Save</button></div>
+      <div class="field-label" style="margin-top:.6rem">Total revenue ($)</div>
+      <div class="input-row"><input class="field" id="fm-rev-in" type="number" placeholder="0.00"><button class="btn sm" onclick="saveFragMawRev()">Save</button></div>
+      <div class="field-label" style="margin-top:.6rem">Paying customers</div>
+      <div class="input-row"><input class="field" id="fm-cust-in" type="number" placeholder="0"><button class="btn sm" onclick="saveFragMawCust()">Save</button></div>
+      <div class="field-label" style="margin-top:.6rem">ElevenLabs credits remaining</div>
+      <div class="input-row"><input class="field" id="el-in" type="number" placeholder="31157"><button class="btn sm" onclick="saveEL()">Save</button></div>
+      <div class="field-label" style="margin-top:.6rem">Anthropic API balance ($)</div>
+      <div class="input-row"><input class="field" id="api-in" type="number" placeholder="4.70"><button class="btn sm" onclick="saveAPI()">Save</button></div>
+    </div>
+  </div>
+
+  <!-- INTEL PAGE -->
+  <div class="page" id="page-intel">
+    <div class="sec-title">Financial Overview</div>
+    <div class="metric-row">
+      <div class="metric-card">
+        <div class="metric-label">TOTAL MRR</div>
+        <div class="metric-val" id="intel-mrr">$0</div>
+        <div class="metric-sub">monthly recurring</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">FIXED COSTS</div>
+        <div class="metric-val red">$11.58</div>
+        <div class="metric-sub">EL + Hetzner + domain</div>
+      </div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-card">
+        <div class="metric-label">NET MONTHLY</div>
+        <div class="metric-val" id="intel-net">-$11.58</div>
+        <div class="metric-sub">MRR minus fixed costs</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">FRAGMAW REV</div>
+        <div class="metric-val amber" id="intel-fm">$0</div>
+        <div class="metric-sub">lifetime total</div>
+      </div>
+    </div>
+
+    <div class="sec-title">Milestone Unlocks</div>
+    <div id="intel-milestones"></div>
+
+    <div class="sec-title">Progress History <span class="badge">Last 30 Days</span></div>
+    <div class="card green-glow">
+      <div style="font-size:.72rem;color:var(--text2);margin-bottom:.6rem">Projected MRR pipeline — updates every time you complete a task</div>
+      <canvas id="pipeline-chart" style="width:100%;max-height:180px"></canvas>
+      <div style="display:flex;gap:1rem;margin-top:.5rem;flex-wrap:wrap">
+        <div style="font-size:.68rem;color:var(--text2)"><span style="color:var(--green)">—</span> Projected MRR</div>
+        <div style="font-size:.68rem;color:var(--text2)"><span style="color:var(--amber)">—</span> Tasks/day</div>
+        <div style="font-size:.68rem;color:var(--text3);margin-left:auto" id="chart-note"></div>
+      </div>
+    </div>
+
+    <div class="sec-title">Wealth Flywheel</div>
+    <div class="card">
+      <div style="font-size:.8rem;font-weight:600;color:var(--text);margin-bottom:.5rem">T1 — Robinhood (VFF RSI Swing)</div>
+      <div style="font-size:.75rem;color:var(--text2);margin-bottom:.3rem">Status: <span style="color:var(--amber)">Deferred — open when MI generates steady income</span></div>
+      <div style="font-size:.72rem;color:var(--text3)">Rule: Never trade on emotion. Stop-loss immediately after every buy. 50% monthly profits → T2.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:.8rem;font-weight:600;color:var(--text);margin-bottom:.5rem">T2 — Vanguard (O + WPM + VNQ)</div>
+      <div style="font-size:.75rem;color:var(--text2)">Status: <span style="color:var(--amber)">Not opened — waiting on steady income</span></div>
+    </div>
+    <div class="card">
+      <div style="font-size:.8rem;font-weight:600;color:var(--text);margin-bottom:.5rem">T3 — Fidelity Roth IRA (VTI → I-Bonds → Silver → VNQ)</div>
+      <div style="font-size:.75rem;color:var(--text2)">Status: <span style="color:var(--amber)">Not opened — waiting on steady income</span></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS PAGE -->
+  <div class="page" id="page-settings">
+    <div class="sec-title">Account</div>
+    <div class="card">
+      <div class="field-label">Update API Key</div>
+      <div class="input-row"><input class="field" id="api-key-in" type="password" placeholder="sk-ant-..."><button class="btn sm" onclick="updateKey()">Save</button></div>
+    </div>
+
+    <div class="sec-title">Check-in Log (Today)</div>
+    <div id="checkin-log-settings"></div>
+
+    <div class="sec-title">About</div>
+    <div class="card">
+      <div style="font-family:var(--mono);font-size:.75rem;color:var(--text2);line-height:1.8">
+        JEEVZ v5.0 — D.G. Heller Command Center<br>
+        Built: March 24, 2026<br>
+        Stack: Pure HTML/CSS/JS — no dependencies<br>
+        Deploy: GitHub Pages → Add to Home Screen<br>
+        Claude Pro expires: April 9, 2026<br>
+        <span style="color:var(--amber)">⚠ Renew or downgrade plan before April 9</span>
+      </div>
+    </div>
+
+    <div class="sec-title">Danger Zone</div>
+    <div class="card">
+      <button class="btn red" onclick="resetAll()">Reset All JEEVZ Data</button>
+      <div style="font-size:.7rem;color:var(--text3);margin-top:.5rem">This cannot be undone. All metrics, logs, and settings will be cleared.</div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('command')" id="nav-command">
+      <div class="nav-icon">⚡</div><div class="nav-label">COMMAND</div>
+    </button>
+    <button class="nav-btn" onclick="showPage('daily-ops')" id="nav-daily-ops">
+      <div class="nav-icon">✓</div><div class="nav-label">DAILY OPS</div>
+    </button>
+    <button class="nav-btn" onclick="showPage('mi-brief')" id="nav-mi-brief">
+      <div class="nav-icon">📊</div><div class="nav-label">MI BRIEF</div>
+    </button>
+    <button class="nav-btn" onclick="showPage('fragmaw-ops')" id="nav-fragmaw-ops">
+      <div class="nav-icon">🎮</div><div class="nav-label">FRAGMAW</div>
+    </button>
+    <button class="nav-btn" onclick="showPage('intel')" id="nav-intel">
+      <div class="nav-icon">💰</div><div class="nav-label">INTEL</div>
+    </button>
+  </nav>
+</div>
+
+<!-- Toast -->
+<div class="toast-wrap"><div class="toast-msg" id="toast"></div></div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const DEFAULTS = {
+  apiKey: '',
+  miSubs: 0, miAvgTier: 9.99,
+  miDMsLifetime: 25, miDMsResponses: 2,
+  miWeekDMs: [0,0,0,0,0,0,0], // Sun-Sat
+  miTrialUsers: [], // [{name, startDate}]
+  fragmawRev: 0, fragmawCustomers: 0,
+  tiktokPosts: 1, bestPostViews: 66,
+  elCredits: 31157, apiBal: 4.70,
+  streakDays: [], // array of date strings 'YYYY-MM-DD'
+  tasksDoneToday: [], // task IDs completed today
+  tasksDate: '',
+  checkinLogs: {}, // {dateStr: [{time, text}]}
+  lastCheckin: 0, // timestamp
+  lastBriefText: '',
+  pipelineHistory: [], // [{date, projMRR, tasksComplete, dmsTotal, fmPosts}]
+};
+
+let S = {...DEFAULTS};
+
+function load() {
+  try {
+    const saved = localStorage.getItem('jeevz_v5');
+    if (saved) S = {...DEFAULTS, ...JSON.parse(saved)};
+  } catch(e) {}
+  // reset tasks if new day
+  const today = todayStr();
+  if (S.tasksDate !== today) {
+    S.tasksDoneToday = [];
+    S.tasksDate = today;
+    save();
+  }
+}
+
+function save() { localStorage.setItem('jeevz_v5', JSON.stringify(S)); }
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+// ─── TASK DEFINITIONS ────────────────────────────────────────────────────────
+const MI_TASKS = [
+  { id: 'mi1', title: 'Post value insight in Facebook Group 1', biz: 'MakerIntelligence',
+    impact: (S) => `Group post generates avg 3–8 warm leads. At 8% DM conversion = 0.2–0.6 trial signups per post. Compounded over 4 weeks: 2.4–9.6 leads touched.`,
+    bars: [{label:'Lead gen',pct:40,color:'green'},{label:'Trial prob',pct:12,color:'amber'}]
+  },
+  { id: 'mi2', title: 'Post value insight in Facebook Group 2', biz: 'MakerIntelligence',
+    impact: () => `Second group post doubles your weekly reach. Two posts = 6–16 warm leads this week. Each lead is a potential $9.99–$39.99/month subscriber.`,
+    bars: [{label:'Weekly reach',pct:55,color:'green'},{label:'MRR impact',pct:8,color:'amber'}]
+  },
+  { id: 'mi3', title: 'Send 10 DMs to warm leads', biz: 'MakerIntelligence',
+    impact: (S) => {
+      const rate = S.miDMsLifetime > 0 ? ((S.miDMsResponses / S.miDMsLifetime) * 100).toFixed(1) : 8;
+      const exp = (10 * (rate/100) * 0.5 * 0.30 * 9.99).toFixed(2);
+      return `Your DM response rate: ${rate}%. 10 DMs → ~${(10*rate/100).toFixed(1)} responses → ~${(10*rate/100*0.5).toFixed(1)} trials → ~$${exp} expected MRR added to pipeline today.`;
+    },
+    bars: [{label:'Response',pct:8,color:'green'},{label:'Pipeline',pct:4,color:'amber'}]
+  },
+  { id: 'mi4', title: 'Follow up with any trial users', biz: 'MakerIntelligence',
+    impact: () => `Follow-up touchpoints increase trial-to-paid conversion by 15–20%. A single personal check-in message can be the difference between a free user and a $9.99/mo subscriber.`,
+    bars: [{label:'Conversion lift',pct:20,color:'green'},{label:'Retention',pct:35,color:'amber'}]
+  },
+  { id: 'mi5', title: 'Check Day 12 conversion email list', biz: 'MakerIntelligence',
+    impact: () => `Day 12 email is your highest-converting touchpoint in the entire funnel. Industry data: personalized Day 12 emails convert at 25–35% vs 10–15% for generic follow-ups. Do not skip this.`,
+    bars: [{label:'Conversion rate',pct:30,color:'green'},{label:'vs generic',pct:12,color:'amber'}]
+  },
+];
+
+const FM_TASKS = [
+  { id: 'fm1', title: 'Generate today\'s roast (pick a setup, run through app)', biz: 'ClockMyRig',
+    impact: () => `Each roast generated costs $0.007 API. At 66 avg views/post and 2% click-through = 1.3 site visitors. At 15% conversion = 0.2 expected customers per post over time.`,
+    bars: [{label:'Cost',pct:1,color:'amber'},{label:'Visitor prob',pct:15,color:'green'}]
+  },
+  { id: 'fm2', title: 'Generate ElevenLabs voice + save audio file locally', biz: 'ClockMyRig',
+    impact: () => `~240 ElevenLabs credits used. ${Math.round(S.elCredits/240)} videos remaining. Saving audio locally = never regenerate = zero wasted credits.`,
+    bars: [{label:'Credits used',pct:Math.min(100,Math.round((240/31157)*100*10)),color:'amber'},{label:'Remaining',pct:Math.min(100,Math.round(S.elCredits/311.57)),color:'green'}]
+  },
+  { id: 'fm3', title: 'Edit in CapCut — 35 sec max, cold open, auto-captions', biz: 'ClockMyRig',
+    impact: () => `Auto-captions increase retention by ~40% for sound-off viewers (est. 50% of TikTok). Trimming to 35 sec targets the optimal TikTok completion rate window. Completion rate drives algorithmic reach.`,
+    bars: [{label:'Retention lift',pct:40,color:'green'},{label:'Algo reach',pct:25,color:'amber'}]
+  },
+  { id: 'fm4', title: 'Post TikTok at 7PM PT + Instagram Reels immediately after', biz: 'ClockMyRig',
+    impact: (S) => {
+      const posts = S.tiktokPosts || 1;
+      const streak = posts >= 5 ? '3–4x algo boost ACTIVE' : `${5-posts} more days to 5-day algo boost`;
+      return `Post #${posts+1}. ${streak}. At 7PM PT you hit peak gaming audience across all US time zones. Each consecutive day of posting compounds algorithmic momentum.`;
+    },
+    bars: [{label:'Algo momentum',pct:Math.min(100,((S.tiktokPosts||1)/10)*100),color:'green'},{label:'Time bonus',pct:70,color:'amber'}]
+  },
+  { id: 'fm5', title: 'Reply to ALL comments within 1 hour of posting', biz: 'ClockMyRig',
+    impact: () => `Early replies boost algorithmic reach by ~40% (TikTok internal data, widely reported). Each reply also keeps the comment thread active = more engagement signals = more push. This is free reach.`,
+    bars: [{label:'Reach boost',pct:40,color:'green'},{label:'Engagement',pct:60,color:'amber'}]
+  },
+  { id: 'fm6', title: 'Post to Instagram Reels (same video, immediately after TikTok)', biz: 'ClockMyRig',
+    impact: (S) => {
+      const posts = S.tiktokPosts || 1;
+      return `Cross-posting to IG Reels costs zero extra time — same video, same caption. IG Reels algo rewards daily posting identically to TikTok. Double platform = double reach from single video. Day ${posts} of consecutive posting.`;
+    },
+    bars: [{label:'IG algo day',pct:Math.min(100,((S.tiktokPosts||1)/14)*100),color:'green'},{label:'Double reach',pct:100,color:'amber'}]
+  },
+];
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+function initJeevz() {
+  const key = document.getElementById('setup-key').value.trim();
+  if (!key.startsWith('sk-ant-')) { toast('Invalid API key format'); return; }
+  S.apiKey = key;
+  save();
+  document.getElementById('setup').classList.remove('active');
+  document.getElementById('app').classList.add('active');
+  bootApp();
+}
+
+function bootApp() {
+  updateHeaderDate();
+  renderAll();
+  setInterval(updateHeaderDate, 30000);
+  setInterval(checkCheckinBanner, 60000);
+  checkCheckinBanner();
+  toast('JEEVZ online. Good morning, sir.');
+}
+
+function updateHeaderDate() {
+  const now = new Date();
+  const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  document.getElementById('hdr-date').textContent =
+    days[now.getDay()] + ' ' + now.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  updateWorkBlock();
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const pg = document.getElementById('page-' + page);
+  if (pg) pg.classList.add('active');
+  const nav = document.getElementById('nav-' + page);
+  if (nav) nav.classList.add('active');
+  renderPageSpecific(page);
+  window.scrollTo(0,0);
+}
+
+function renderPageSpecific(page) {
+  if (page === 'command')     renderCommand();
+  if (page === 'daily-ops')   renderDailyOps();
+  if (page === 'mi-brief')    renderMIBrief();
+  if (page === 'fragmaw-ops') renderFragmawOps();
+  if (page === 'intel')       renderIntel();
+  if (page === 'settings')    renderSettings();
+}
+
+function renderAll() {
+  renderCommand();
+  renderDailyOps();
+  renderMIBrief();
+  renderFragmawOps();
+  renderIntel();
+}
+
+// ─── WORK BLOCK ───────────────────────────────────────────────────────────────
+function updateWorkBlock() {
+  const h = new Date().getHours();
+  const el = document.getElementById('work-block-status');
+  if (!el) return;
+  let cls, icon, title, sub;
+  if (h < 8)  { cls='pre';            icon='🌙'; title='PRE-SESSION'; sub='Work block starts at 8:00 AM. Rest and prepare.'; }
+  else if (h < 12) { cls='active-session'; icon='⚡'; title='WORK BLOCK ACTIVE — 8AM–12PM'; sub='Focus time. MI outreach + FragMaw content. No distractions.'; }
+  else        { cls='post';            icon='☀️'; title='POST-SESSION'; sub='Morning block complete. Review, rest, then evening shift.'; }
+  el.innerHTML = `<div class="wblock ${cls}"><div class="wblock-icon">${icon}</div><div><div class="wblock-title">${title}</div><div class="wblock-sub">${sub}</div></div></div>`;
+}
+
+// ─── CHECK-IN BANNER ─────────────────────────────────────────────────────────
+function checkCheckinBanner() {
+  const h = new Date().getHours();
+  const banner = document.getElementById('checkin-banner');
+  if (h < 8 || h >= 12) { banner.classList.remove('show'); return; }
+  const now = Date.now();
+  const sinceLastCheckin = now - (S.lastCheckin || 0);
+  if (sinceLastCheckin > 55 * 60 * 1000) banner.classList.add('show');
+  else banner.classList.remove('show');
+}
+
+function logCheckin() {
+  const input = document.getElementById('checkin-input');
+  const text = input.value.trim();
+  if (!text) { toast('Type what you completed first'); return; }
+  const today = todayStr();
+  if (!S.checkinLogs[today]) S.checkinLogs[today] = [];
+  S.checkinLogs[today].push({ time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}), text });
+  S.lastCheckin = Date.now();
+  save();
+  input.value = '';
+  document.getElementById('checkin-banner').classList.remove('show');
+  renderCheckinLog();
+  toast('Check-in logged ✓');
+}
+
+function renderCheckinLog() {
+  const today = todayStr();
+  const logs = S.checkinLogs[today] || [];
+  const el = document.getElementById('checkin-log-display');
+  if (!el) return;
+  if (!logs.length) { el.innerHTML = '<div style="font-size:.75rem;color:var(--text3)">No check-ins logged yet today.</div>'; return; }
+  el.innerHTML = logs.map(l => `<div class="log-item"><div class="log-time">${l.time}</div>${l.text}</div>`).join('');
+}
+
+// ─── COMMAND PAGE ─────────────────────────────────────────────────────────────
+function renderCommand() {
+  const mrr = getMRR();
+  const pct = Math.min(100, (mrr/800)*100);
+  document.getElementById('cmd-mrr').textContent = '$' + mrr.toFixed(0);
+  document.getElementById('cmd-mrr-pct').textContent = pct.toFixed(1) + '%';
+  document.getElementById('cmd-mrr-bar').style.width = pct + '%';
+  if (pct < 30) document.getElementById('cmd-mrr-bar').classList.add('red');
+
+  const deadline = new Date('2026-04-30');
+  const days = Math.ceil((deadline - new Date()) / 86400000);
+  const daysEl = document.getElementById('cmd-days');
+  daysEl.textContent = days;
+  daysEl.className = 'metric-val ' + (days < 14 ? 'red' : days < 21 ? 'amber' : '');
+
+  document.getElementById('cmd-mi-subs').textContent = S.miSubs;
+  document.getElementById('cmd-mi-mrr').textContent = '$' + (S.miSubs * S.miAvgTier).toFixed(0) + '/mo';
+  document.getElementById('cmd-fm-rev').textContent = '$' + (S.fragmawRev||0).toFixed(0);
+  document.getElementById('cmd-fm-posts').textContent = (S.tiktokPosts||1) + ' posts total';
+
+  // top 3 uncompleted tasks
+  const allTasks = [...MI_TASKS, ...FM_TASKS];
+  const pending = allTasks.filter(t => !S.tasksDoneToday.includes(t.id)).slice(0,3);
+  const el = document.getElementById('cmd-top-tasks');
+  if (!el) return;
+  el.innerHTML = pending.map(t => `
+    <div class="task-item ${S.tasksDoneToday.includes(t.id)?'done':''}" onclick="quickToggle('${t.id}')">
+      <div class="task-check">${S.tasksDoneToday.includes(t.id)?'✓':''}</div>
+      <div class="task-body">
+        <div class="task-title">${t.title}</div>
+        <div class="task-biz">${t.biz}</div>
+      </div>
+    </div>`).join('');
+}
+
+function quickToggle(id) { toggleTask(id); renderCommand(); }
+
+// ─── DAILY OPS PAGE ───────────────────────────────────────────────────────────
+function renderDailyOps() {
+  updateWorkBlock();
+  renderTaskList('mi-task-list', MI_TASKS);
+  renderTaskList('fm-task-list', FM_TASKS);
+  renderProgressBar();
+  renderStreakGrid();
+  renderCheckinLog();
+}
+
+function renderTaskList(elId, tasks) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = tasks.map(t => {
+    const done = S.tasksDoneToday.includes(t.id);
+    const impactText = typeof t.impact === 'function' ? t.impact(S) : t.impact;
+    const bars = t.bars ? t.bars.map(b => `
+      <div class="mini-bar-row">
+        <div class="mini-bar-name">${b.label}</div>
+        <div class="mini-bar-track"><div class="mini-bar-fill ${b.color}" style="width:${b.pct}%"></div></div>
+        <div class="mini-bar-pct">${b.pct}%</div>
+      </div>`).join('') : '';
+    return `
+      <div class="task-item ${done?'done':''}" id="task-${t.id}" onclick="toggleTask('${t.id}')">
+        <div class="task-check">${done?'✓':''}</div>
+        <div class="task-body">
+          <div class="task-title">${t.title}</div>
+          <div class="task-biz">${t.biz}</div>
+          <div class="task-impact">
+            <div style="margin-bottom:.4rem">${impactText}</div>
+            ${bars ? '<div class="mini-chart"><div class="mini-chart-label">IMPACT INDICATORS</div>' + bars + '</div>' : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleTask(id) {
+  const idx = S.tasksDoneToday.indexOf(id);
+  if (idx === -1) S.tasksDoneToday.push(id);
+  else S.tasksDoneToday.splice(idx, 1);
+  // record pipeline snapshot
+  recordPipelineSnapshot();
+  // update streak if all done
+  const total = MI_TASKS.length + FM_TASKS.length;
+  if (S.tasksDoneToday.length >= total) updateStreak();
+  save();
+  renderDailyOps();
+  renderCommand();
+}
+
+function renderProgressBar() {
+  const total = MI_TASKS.length + FM_TASKS.length;
+  const done = S.tasksDoneToday.length;
+  const pct = Math.round((done/total)*100);
+  const badge = document.getElementById('ops-progress-badge');
+  const label = document.getElementById('ops-prog-label');
+  const pctEl = document.getElementById('ops-prog-pct');
+  const bar   = document.getElementById('ops-prog-bar');
+  const msg   = document.getElementById('ops-streak-msg');
+  if (badge) badge.textContent = done + '/' + total;
+  if (label) label.textContent = done + ' of ' + total + ' tasks complete';
+  if (pctEl) pctEl.textContent = pct + '%';
+  if (bar)   { bar.style.width = pct + '%'; bar.className = 'prog-fill' + (pct===100?' ':''); }
+  if (msg) {
+    if (pct === 100) msg.textContent = '🔥 Full day complete! Streak updated.';
+    else if (pct >= 50) msg.textContent = `Halfway there — ${total - done} tasks remaining.`;
+    else msg.textContent = `Each task completed moves the needle. Start with the highest-priority item.`;
+  }
+}
+
+function recordPipelineSnapshot() {
+  const today = todayStr();
+  if (!S.pipelineHistory) S.pipelineHistory = [];
+  // projected MRR = current subs * tier + fragmaw + (tasks done today * small multiplier)
+  const dms = S.miDMsLifetime || 25;
+  const resp = S.miDMsResponses || 2;
+  const rate = dms > 0 ? resp/dms : 0.08;
+  const projPaying = Math.round(dms * rate * 0.5 * 0.30);
+  const projMRR = (S.miSubs||0) * (S.miAvgTier||9.99) + (S.fragmawRev||0) + projPaying * 9.99;
+  // update or add today's entry
+  const existing = S.pipelineHistory.findIndex(h => h.date === today);
+  const entry = { date: today, projMRR: parseFloat(projMRR.toFixed(2)), tasksComplete: S.tasksDoneToday.length, dmsTotal: S.miDMsLifetime||25, fmPosts: S.tiktokPosts||1 };
+  if (existing >= 0) S.pipelineHistory[existing] = entry;
+  else S.pipelineHistory.push(entry);
+  // keep last 30 days only
+  if (S.pipelineHistory.length > 30) S.pipelineHistory = S.pipelineHistory.slice(-30);
+}
+
+function renderStreakGrid() {
+  const el = document.getElementById('streak-grid');
+  if (!el) return;
+  const days = ['S','M','T','W','T','F','S'];
+  const today = new Date();
+  let html = '';
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    const isToday = i === 0;
+    const done = S.streakDays.includes(ds);
+    html += `<div class="streak-day ${done?'done':''} ${isToday?'today':''}">
+      <div class="sd-label">${days[d.getDay()]}</div>
+      <div class="sd-icon">${done ? '✓' : '·'}</div>
+    </div>`;
+  }
+  el.innerHTML = html;
+  // streak count
+  let streak = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    if (S.streakDays.includes(d.toISOString().split('T')[0])) streak++;
+    else break;
+  }
+  document.getElementById('ops-streak-msg').textContent =
+    streak > 0 ? `🔥 ${streak}-day streak active. Habit formation: ${Math.round((streak/66)*100)}% of 66-day target.`
+               : 'Complete all 10 tasks today to start your streak.';
+}
+
+function updateStreak() {
+  const today = todayStr();
+  if (!S.streakDays.includes(today)) { S.streakDays.push(today); save(); }
+}
+
+// ─── MI BRIEF PAGE ────────────────────────────────────────────────────────────
+function renderMIBrief() {
+  renderMIFunnel();
+  renderMIVelocity();
+  renderMIConvMath();
+  renderMIPhase();
+  renderMIDay12();
+  // response rate
+  const rr = S.miDMsLifetime > 0 ? ((S.miDMsResponses/S.miDMsLifetime)*100).toFixed(1)+'%' : '—';
+  const rrEl = document.getElementById('mi-response-rate');
+  if (rrEl) rrEl.textContent = rr;
+  const rrEl2 = document.getElementById('mi-week-dms');
+  const weekTotal = (S.miWeekDMs||[0,0,0,0,0,0,0]).reduce((a,b)=>a+b,0);
+  if (rrEl2) rrEl2.textContent = weekTotal;
+}
+
+function renderMIFunnel() {
+  const el = document.getElementById('mi-funnel');
+  if (!el) return;
+  const stages = [
+    { label: 'LEADS CONTACTED', val: S.miDMsLifetime||25, max: 100, color: '#34d350' },
+    { label: 'RESPONSES', val: S.miDMsResponses||2, max: S.miDMsLifetime||25, color: '#38bdf8' },
+    { label: 'TRIAL SIGNUPS', val: S.miTrialUsers?.length||0, max: Math.max(1,S.miDMsResponses||2), color: '#fbbf24' },
+    { label: 'PAYING SUBSCRIBERS', val: S.miSubs||0, max: Math.max(1,S.miTrialUsers?.length||0), color: '#f59e0b' },
+  ];
+  el.innerHTML = stages.map(s => {
+    const pct = Math.min(100, Math.round((s.val/s.max)*100));
+    const w = Math.max(8, pct);
+    return `<div class="funnel-row">
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar" style="width:${w}%;background:${s.color}22;border-right:2px solid ${s.color}">
+          <span class="funnel-label-inner" style="color:${s.color}">${s.label}</span>
+        </div>
+      </div>
+      <div class="funnel-meta" style="color:${s.color}">${s.val}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMIVelocity() {
+  const el = document.getElementById('mi-velocity-chart');
+  if (!el) return;
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const today = new Date().getDay();
+  const dms = S.miWeekDMs || [0,0,0,0,0,0,0];
+  const maxDms = Math.max(10, ...dms);
+  el.innerHTML = dms.map((v,i) => `
+    <div class="mini-bar-row">
+      <div class="mini-bar-name" style="color:${i===today?'var(--green)':'var(--text2)'}">${days[i]}${i===today?' ←':''}</div>
+      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round((v/maxDms)*100)}%"></div></div>
+      <div class="mini-bar-pct">${v}</div>
+    </div>`).join('');
+}
+
+function renderMIConvMath() {
+  const el = document.getElementById('mi-conv-math');
+  if (!el) return;
+  const dms = S.miDMsLifetime || 25;
+  const resp = S.miDMsResponses || 2;
+  const rate = dms > 0 ? resp/dms : 0.08;
+  const trials = S.miTrialUsers?.length || 0;
+  const paying = S.miSubs || 0;
+  const trialConv = trials > 0 && resp > 0 ? trials/resp : 0.5;
+  const paidConv = trials > 0 ? paying/trials : 0.3;
+  const projPaying = Math.round(dms * rate * trialConv * paidConv);
+  const projMRR = projPaying * (S.miAvgTier || 9.99);
+
+  el.innerHTML = `
+    <div style="font-size:.75rem;color:var(--text2);line-height:1.9">
+      <div>DMs sent: <span style="color:var(--text);font-family:var(--mono)">${dms}</span> × Response rate: <span style="color:var(--green);font-family:var(--mono)">${(rate*100).toFixed(1)}%</span> = <span style="color:var(--text);font-family:var(--mono)">${resp} responses</span></div>
+      <div>Responses × Trial conv: <span style="color:var(--green);font-family:var(--mono)">${(trialConv*100).toFixed(0)}%</span> = <span style="color:var(--text);font-family:var(--mono)">${trials} trials</span></div>
+      <div>Trials × Paid conv: <span style="color:var(--green);font-family:var(--mono)">${(paidConv*100).toFixed(0)}%</span> = <span style="color:var(--text);font-family:var(--mono)">${paying} paying</span></div>
+    </div>
+    <div style="margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--border)">
+      <div style="font-family:var(--mono);font-size:.7rem;color:var(--text3)">TO HIT $800/mo TARGET:</div>
+      <div style="font-size:.8rem;color:var(--text);margin-top:.2rem">Need <span style="color:var(--amber);font-family:var(--mono)">${Math.ceil(800/9.99)}</span> Starter subscribers <em>or</em> <span style="color:var(--amber);font-family:var(--mono)">${Math.ceil(800/19.99)}</span> Growth subscribers</div>
+      <div style="font-size:.75rem;color:var(--text2);margin-top:.2rem">At current rate: ~${Math.round(800/projMRR*dms)} total DMs needed to hit target</div>
+    </div>`;
+}
+
+function renderMIPhase() {
+  const el = document.getElementById('mi-phase-card');
+  if (!el) return;
+  const subs = S.miSubs || 0;
+  let phase, focus, actions;
+  if (subs < 15) {
+    phase = 'PHASE 1 — Manual (0–15 users)';
+    focus = 'Sunday workflow is manual. ~6 min/seller. Build pipeline through daily DMs and Facebook value posts.';
+    actions = ['Post value insight in 2+ Facebook groups daily','Send 10 DMs/day to warm leads','Get first 3 free trial users this week','Sunday: paste Business Prompt + User Prompt → render report → email'];
+  } else {
+    phase = 'PHASE 2 — n8n Automation (15+ users)';
+    focus = 'All 5 n8n pipelines must be live. Automation handles new onboarding. Your time shifts to marketing.';
+    actions = ['Build n8n Pipeline 4+5 if not live','Test full automation for new onboarding','Shift to growth marketing: Instagram, affiliate, referral'];
+  }
+  el.innerHTML = `
+    <div style="font-family:var(--mono);font-size:.7rem;color:var(--amber);margin-bottom:.4rem">${phase}</div>
+    <div style="font-size:.78rem;color:var(--text2);margin-bottom:.6rem">${focus}</div>
+    ${actions.map(a => `<div style="font-size:.75rem;color:var(--text);padding:.2rem 0;border-bottom:1px solid var(--border);display:flex;gap:.5rem"><span style="color:var(--green)">→</span>${a}</div>`).join('')}`;
+}
+
+function renderMIDay12() {
+  const el = document.getElementById('mi-day12-card');
+  if (!el) return;
+  const users = S.miTrialUsers || [];
+  if (!users.length) { el.innerHTML = '<div style="font-size:.8rem;color:var(--text2)">No trial users yet. Add trial users in the form below to track Day 12 conversion emails.</div>'; return; }
+  const today = new Date();
+  el.innerHTML = users.map(u => {
+    const start = new Date(u.startDate);
+    const day = Math.ceil((today - start) / 86400000);
+    const remaining = 12 - day;
+    const urgent = remaining <= 2 && remaining >= 0;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:.8rem;font-weight:500">${u.name}</div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--text3)">Day ${day} of trial</div>
+      </div>
+      <div style="text-align:right">
+        ${urgent ? `<div style="font-family:var(--mono);font-size:.68rem;color:var(--amber)">⚠ SEND EMAIL IN ${remaining} DAYS</div>` : ''}
+        ${remaining < 0 ? '<div style="font-family:var(--mono);font-size:.68rem;color:var(--red)">TRIAL ENDED — FOLLOW UP NOW</div>' : ''}
+        ${remaining > 2 ? `<div style="font-family:var(--mono);font-size:.68rem;color:var(--text3)">${remaining} days to Day 12</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── FRAGMAW OPS PAGE ─────────────────────────────────────────────────────────
+function renderFragmawOps() {
+  document.getElementById('fm-tiktok-posts').textContent = S.tiktokPosts || 1;
+  document.getElementById('fm-best-views').textContent = S.bestPostViews || 66;
+  document.getElementById('fm-rev-display').textContent = '$' + (S.fragmawRev||0).toFixed(2);
+  document.getElementById('fm-customers').textContent = S.fragmawCustomers || 0;
+
+  // token trackers
+  const elPct = Math.min(100, ((S.elCredits||31157)/31157)*100);
+  document.getElementById('el-credits').textContent = (S.elCredits||31157).toLocaleString();
+  document.getElementById('el-bar').style.width = elPct + '%';
+  document.getElementById('el-label').textContent = `~${Math.round((S.elCredits||31157)/240)} videos remaining at 240 credits/video`;
+
+  const apiBal = S.apiBal || 4.70;
+  const apiPct = Math.min(100, (apiBal/10)*100);
+  document.getElementById('api-bal').textContent = '$' + apiBal.toFixed(2);
+  document.getElementById('api-bar').style.width = apiPct + '%';
+  document.getElementById('api-label').textContent = `~${Math.round(apiBal/0.007)} roasts remaining`;
+
+  // viral score (0–100 based on posting consistency)
+  const posts = S.tiktokPosts || 1;
+  const streakLen = getStreakLength();
+  const viral = Math.min(100, Math.round((posts * 5) + (streakLen * 8)));
+  document.getElementById('viral-score').textContent = viral;
+  document.getElementById('viral-bar').style.width = viral + '%';
+  document.getElementById('viral-msg').textContent =
+    viral >= 50 ? '🔥 Momentum building — algorithm is warming up' :
+    viral >= 25 ? 'Growing — keep posting daily at 7PM PT' :
+    'Post daily at 7PM PT to build algorithmic momentum.';
+
+  renderFragmawTodayPlan();
+  renderFragmawSchedule();
+}
+
+function getStreakLength() {
+  const today = new Date();
+  let streak = 0;
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    if (S.streakDays.includes(d.toISOString().split('T')[0])) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function renderFragmawTodayPlan() {
+  const el = document.getElementById('fm-today-plan');
+  if (!el) return;
+  const day = new Date().getDay(); // 0=Sun
+  const types = [
+    { type: 'TYPE 2 — THE CHALLENGE', time: '7:00 PM PT', desc: 'FragMaw dares the audience. Drives UGC and shares. No product mention in post body — link in bio only.' },
+    { type: 'TYPE 1 — THE ROAST', time: '7:00 PM PT', desc: 'Pick a setup from r/battlestations or describe a famous streamer\'s rig. FragMaw cold open + roast + kill shot. 25–35 sec max.' },
+    { type: 'TYPE 4 — THE VERDICT', time: '7:00 PM PT', desc: 'Ultra-short (15–20 sec) brutal verdict on a gaming product or trend. Zero setup needed. Pure reaction content.' },
+    { type: 'TYPE 1 — THE ROAST', time: '7:00 PM PT', desc: 'Daily roast — different setup than Monday. r/pcmasterrace is a good source. Screenshot result for Reddit post.' },
+    { type: 'TYPE 3 — LORE DROP', time: '7:00 PM PT', desc: 'Tell one FragMaw story: the 1994 fire, the Toledo arcades, finishing Gerald\'s rig. No product mention. "Is she real?" = viral.' },
+    { type: 'TYPE 1 — THE ROAST', time: '7:00 PM PT', desc: 'Weekend roast — higher viewership. Try roasting your OWN setup for authenticity. Personal = more shares.' },
+    { type: 'TYPE 2 — THE CHALLENGE', time: '7:00 PM PT', desc: 'Sunday challenge post. Best day for UGC invites. Also batch 3 MI Facebook posts for the week while you\'re at it.' },
+  ];
+  const t = types[day];
+  el.innerHTML = `
+    <div style="font-family:var(--mono);font-size:.7rem;color:var(--green);margin-bottom:.4rem">TODAY'S CONTENT TYPE</div>
+    <div style="font-size:.88rem;font-weight:600;margin-bottom:.3rem">${t.type}</div>
+    <div style="font-size:.75rem;color:var(--text2);line-height:1.6;margin-bottom:.5rem">${t.desc}</div>
+    <div style="font-family:var(--mono);font-size:.7rem;color:var(--amber)">⏰ POST AT ${t.time}</div>`;
+}
+
+function renderFragmawSchedule() {
+  const el = document.getElementById('fm-content-schedule');
+  if (!el) return;
+  const schedule = [
+    { day: 'MON', type: 'Type 1: Roast', src: 'r/battlestations setup' },
+    { day: 'TUE', type: 'Type 2: Challenge', src: 'FragMaw dares audience' },
+    { day: 'WED', type: 'Type 4: Verdict', src: 'Product/trend reaction' },
+    { day: 'THU', type: 'Type 1: Roast', src: 'r/pcmasterrace setup' },
+    { day: 'FRI', type: 'Type 3: Lore Drop', src: 'Gerald story / 1994 fire' },
+    { day: 'SAT', type: 'Type 1: Roast', src: 'Your own rig or fan-submitted' },
+    { day: 'SUN', type: 'Type 2: Challenge', src: 'Weekly UGC invite + batch MI posts' },
+  ];
+  const today = ['SUN','MON','TUE','WED','THU','FRI','SAT'][new Date().getDay()];
+  el.innerHTML = schedule.map(s => `
+    <div style="display:flex;gap:.6rem;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--mono);font-size:.65rem;color:${s.day===today?'var(--green)':'var(--text3)'};width:30px;flex-shrink:0;font-weight:${s.day===today?'700':'400'}">${s.day}</div>
+      <div style="flex:1">
+        <div style="font-size:.75rem;color:${s.day===today?'var(--text)':'var(--text2)'};font-weight:${s.day===today?'500':'400'}">${s.type}</div>
+        <div style="font-size:.65rem;color:var(--text3)">${s.src}</div>
+      </div>
+      ${s.day===today?'<div style="font-family:var(--mono);font-size:.6rem;color:var(--green)">TODAY</div>':''}
+    </div>`).join('');
+}
+
+// ─── INTEL PAGE ───────────────────────────────────────────────────────────────
+let pipelineChartInstance = null;
+
+function renderIntel() {
+  const mrr = getMRR();
+  const net = mrr - 11.58;
+  document.getElementById('intel-mrr').textContent = '$' + mrr.toFixed(0);
+  document.getElementById('intel-net').textContent = (net >= 0 ? '+' : '') + '$' + net.toFixed(2);
+  document.getElementById('intel-net').className = 'metric-val ' + (net >= 0 ? '' : 'red');
+  document.getElementById('intel-fm').textContent = '$' + (S.fragmawRev||0).toFixed(2);
+  renderMilestones();
+  renderPipelineChart();
+}
+
+function renderMilestones() {
+  const mrr = getMRR();
+  const milestones = [
+    { target: 100,   label: '$100/mo MRR',    unlock: 'JEEVZ connects to Claude API for live MI brief intelligence' },
+    { target: 500,   label: '$500/mo MRR',    unlock: 'JARVIS local AI activates (Ollama + ChromaDB). CADCaddy unlock.' },
+    { target: 800,   label: '$800/mo MRR',    unlock: '⭐ APRIL 30 DEADLINE MET. Open T1 Robinhood account.' },
+    { target: 1000,  label: '$1,000/mo MRR',  unlock: 'Phase 2 full automation + affiliate program launch' },
+    { target: 2000,  label: '$2,000/mo MRR',  unlock: 'CADCaddy reactivates. Instagram paid outreach begins.' },
+    { target: 5000,  label: '$5,000/mo MRR',  unlock: 'JARVIS v1 full build. First business exit possible.' },
+    { target: 10000, label: '$10,000/mo MRR', unlock: 'Niche expansion (candles, jewelry, woodworking). First hire.' },
+  ];
+  const el = document.getElementById('intel-milestones');
+  if (!el) return;
+  el.innerHTML = milestones.map(m => {
+    const done = mrr >= m.target;
+    const pct = Math.min(100, (mrr/m.target)*100);
+    return `<div class="card ${done?'green-glow':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+        <div style="font-family:var(--mono);font-size:.72rem;color:${done?'var(--green)':'var(--text2)'};font-weight:600">${m.label}</div>
+        <div style="font-family:var(--mono);font-size:.65rem;color:${done?'var(--green)':'var(--text3)'}">${done?'✓ UNLOCKED':pct.toFixed(0)+'%'}</div>
+      </div>
+      <div class="prog-wrap"><div class="prog-fill ${done?'':'amber'}" style="width:${pct}%"></div></div>
+      <div style="font-size:.72rem;color:var(--text2);margin-top:.35rem">${m.unlock}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPipelineChart() {
+  const canvas = document.getElementById('pipeline-chart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  const history = S.pipelineHistory || [];
+  const today = todayStr();
+  const displayHistory = history.length > 0 ? history : [{ date: today, projMRR: 0, tasksComplete: 0 }];
+  const labels = displayHistory.map(h => {
+    const d = new Date(h.date + 'T12:00:00');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
+  const mrrData = displayHistory.map(h => h.projMRR || 0);
+  const tasksData = displayHistory.map(h => h.tasksComplete || 0);
+  const noteEl = document.getElementById('chart-note');
+  if (noteEl) {
+    const latest = displayHistory[displayHistory.length - 1];
+    noteEl.textContent = latest ? `Latest: $${(latest.projMRR||0).toFixed(0)} pipeline` : '';
+  }
+  if (pipelineChartInstance) { pipelineChartInstance.destroy(); pipelineChartInstance = null; }
+  pipelineChartInstance = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Projected MRR ($)', data: mrrData, borderColor: '#34d350', backgroundColor: 'rgba(52,211,80,0.08)', borderWidth: 2, pointBackgroundColor: '#34d350', pointRadius: 3, tension: 0.35, fill: true, yAxisID: 'y' },
+        { label: 'Tasks Complete', data: tasksData, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.05)', borderWidth: 1.5, pointBackgroundColor: '#f59e0b', pointRadius: 2, tension: 0.35, fill: false, yAxisID: 'y2' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#0f1f0f', borderColor: 'rgba(52,211,80,0.3)', borderWidth: 1, titleColor: '#6db87d', bodyColor: '#e8f5e8', titleFont: { family: 'IBM Plex Mono', size: 10 }, bodyFont: { family: 'IBM Plex Mono', size: 10 }, callbacks: { label: ctx => ctx.datasetIndex === 0 ? ` $${ctx.parsed.y.toFixed(0)} projected MRR` : ` ${ctx.parsed.y} tasks done` } }
+      },
+      scales: {
+        x: { ticks: { color: '#2d5c35', font: { family: 'IBM Plex Mono', size: 9 }, maxRotation: 0 }, grid: { color: 'rgba(52,211,80,0.06)' }, border: { color: 'rgba(52,211,80,0.15)' } },
+        y: { position: 'left', ticks: { color: '#34d350', font: { family: 'IBM Plex Mono', size: 9 }, callback: v => '$'+v }, grid: { color: 'rgba(52,211,80,0.06)' }, border: { color: 'rgba(52,211,80,0.15)' }, min: 0 },
+        y2: { position: 'right', ticks: { color: '#f59e0b', font: { family: 'IBM Plex Mono', size: 9 } }, grid: { display: false }, border: { color: 'rgba(245,158,11,0.15)' }, min: 0, max: 11 }
+      }
+    }
+  });
+}
+
+// ─── SETTINGS PAGE ────────────────────────────────────────────────────────────
+function renderSettings() {
+  const today = todayStr();
+  const logs = S.checkinLogs[today] || [];
+  const el = document.getElementById('checkin-log-settings');
+  if (!el) return;
+  el.innerHTML = logs.length
+    ? logs.map(l => `<div class="log-item"><div class="log-time">${l.time}</div>${l.text}</div>`).join('')
+    : '<div style="font-size:.75rem;color:var(--text3)">No check-ins logged today.</div>';
+}
+
+// ─── BRIEF ────────────────────────────────────────────────────────────────────
+async function generateBrief() {
+  if (!S.apiKey) { toast('No API key set'); return; }
+  const btn = document.getElementById('brief-btn');
+  const box = document.getElementById('brief-text');
+  btn.textContent = 'Generating...'; btn.disabled = true;
+  box.classList.remove('placeholder'); box.textContent = '';
+
+  const mrr = getMRR();
+  const days = Math.ceil((new Date('2026-04-30') - new Date()) / 86400000);
+  const prompt = `You are JEEVZ, D.G. Heller's personal AI command system. Give a sharp, motivating morning brief in 3–4 sentences. Be direct, not fluffy. Include one specific action for today.
+
+Current status: MRR $${mrr}, ${S.miSubs||0} MI subscribers, ${S.tiktokPosts||1} FragMaw posts, ${days} days to April 30 deadline. FragMaw revenue: $${S.fragmawRev||0}. DMs sent lifetime: ${S.miDMsLifetime||25}, responses: ${S.miDMsResponses||2}.
+
+Do NOT use asterisks or markdown. Plain text only. Keep it under 100 words. End with one specific action for today.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': S.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 200, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'Brief unavailable. Check API key.';
+    box.textContent = text;
+    S.lastBriefText = text;
+    save();
+  } catch(e) {
+    box.textContent = 'Network error generating brief. Check connection.';
+  }
+  btn.textContent = 'Refresh Brief'; btn.disabled = false;
+}
+
+function speakBrief() {
+  const text = S.lastBriefText || document.getElementById('brief-text').textContent;
+  if (!text || text.includes('standing by')) { toast('Generate brief first'); return; }
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95; u.pitch = 0.9;
+    window.speechSynthesis.speak(u);
+    toast('Speaking...');
+  } else { toast('Speech not supported on this browser'); }
+}
+
+// ─── SAVE FUNCTIONS ───────────────────────────────────────────────────────────
+function getMRR() { return (S.miSubs||0) * (S.miAvgTier||9.99); }
+
+function saveMI() {
+  const v = parseInt(document.getElementById('mi-subs-in').value);
+  if (!isNaN(v) && v >= 0) { S.miSubs = v; save(); renderAll(); toast('MI subscribers updated'); }
+  document.getElementById('mi-subs-in').value = '';
+}
+
+function saveDMsToday() {
+  const v = parseInt(document.getElementById('mi-dms-in').value);
+  if (!isNaN(v) && v > 0) {
+    const day = new Date().getDay();
+    if (!S.miWeekDMs) S.miWeekDMs = [0,0,0,0,0,0,0];
+    S.miWeekDMs[day] += v;
+    S.miDMsLifetime = (S.miDMsLifetime||25) + v;
+    save(); renderMIBrief(); toast(`+${v} DMs logged`);
+  }
+  document.getElementById('mi-dms-in').value = '';
+}
+
+function saveMIResponses() {
+  const v = parseInt(document.getElementById('mi-resp-in').value);
+  if (!isNaN(v)) { S.miDMsResponses = v; save(); renderMIBrief(); toast('Responses updated'); }
+  document.getElementById('mi-resp-in').value = '';
+}
+
+function addTrialUser() {
+  const name = document.getElementById('mi-trial-name').value.trim();
+  if (!name) { toast('Enter a name and start date'); return; }
+  if (!S.miTrialUsers) S.miTrialUsers = [];
+  S.miTrialUsers.push({ name, startDate: new Date().toISOString().split('T')[0] });
+  save(); renderMIBrief(); toast('Trial user added — Day 12 alert set');
+  document.getElementById('mi-trial-name').value = '';
+}
+
+function saveFragMaw() {
+  const v = parseInt(document.getElementById('fm-posts-in').value);
+  if (!isNaN(v)) { S.tiktokPosts = v; save(); renderFragmawOps(); renderCommand(); toast('Posts updated'); }
+  document.getElementById('fm-posts-in').value = '';
+}
+
+function saveFragMawRev() {
+  const v = parseFloat(document.getElementById('fm-rev-in').value);
+  if (!isNaN(v)) { S.fragmawRev = v; save(); renderFragmawOps(); renderCommand(); renderIntel(); toast('Revenue updated'); }
+  document.getElementById('fm-rev-in').value = '';
+}
+
+function saveFragMawCust() {
+  const v = parseInt(document.getElementById('fm-cust-in').value);
+  if (!isNaN(v)) { S.fragmawCustomers = v; save(); renderFragmawOps(); toast('Customers updated'); }
+  document.getElementById('fm-cust-in').value = '';
+}
+
+function saveEL() {
+  const v = parseInt(document.getElementById('el-in').value);
+  if (!isNaN(v)) { S.elCredits = v; save(); renderFragmawOps(); toast('ElevenLabs credits updated'); }
+  document.getElementById('el-in').value = '';
+}
+
+function saveAPI() {
+  const v = parseFloat(document.getElementById('api-in').value);
+  if (!isNaN(v)) { S.apiBal = v; save(); renderFragmawOps(); toast('API balance updated'); }
+  document.getElementById('api-in').value = '';
+}
+
+function updateKey() {
+  const k = document.getElementById('api-key-in').value.trim();
+  if (!k.startsWith('sk-ant-')) { toast('Invalid key format'); return; }
+  S.apiKey = k; save(); toast('API key updated');
+  document.getElementById('api-key-in').value = '';
+}
+
+function resetAll() {
+  if (!confirm('Reset ALL JEEVZ data? This cannot be undone.')) return;
+  localStorage.removeItem('jeevz_v5');
+  location.reload();
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+load();
+if (S.apiKey) {
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  bootApp();
+} else {
+  document.getElementById('setup').classList.add('active');
+}
+</script>
+</body>
+</html>
